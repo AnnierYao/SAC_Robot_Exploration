@@ -48,14 +48,14 @@ class RobEnv(gym.Env):
 		# self.observation_space = spaces.Box(low=0, high=1, shape=(84, 84, 1), dtype=np.uint8)
 		self.observation_space = spaces.Box(low=0, high=1, shape=(57600,), dtype=np.uint8)
 
-		with open('logs/A2C/steps_A2C.csv', 'a', newline='') as csvfile:
-			csvwriter = csv.writer(csvfile)
-			row = ['Map_Index', 'Average_Steps']
-			csvwriter.writerow(row)
-		with open('logs/A2C/rewards_A2C.csv', 'a', newline='') as csvfile:
-			csvwriter = csv.writer(csvfile)
-			row = ['Step', 'Average_Reward']
-			csvwriter.writerow(row)
+		# with open('logs/A2C/steps_A2C.csv', 'a', newline='') as csvfile:
+		# 	csvwriter = csv.writer(csvfile)
+		# 	row = ['Map_Index', 'Average_Steps']
+		# 	csvwriter.writerow(row)
+		# with open('logs/A2C/rewards_A2C.csv', 'a', newline='') as csvfile:
+		# 	csvwriter = csv.writer(csvfile)
+		# 	row = ['Step', 'Average_Reward']
+		# 	csvwriter.writerow(row)
 
 	def step(self, action):
 		state, self.reward, terminal, self.done, re_locate, collision_index, finish_all_map = self.robot_explo.step(action)
@@ -77,10 +77,10 @@ class RobEnv(gym.Env):
 			self.done = True
 		if self.done == True:
 			self.totoal_step += self.map_step
-			with open('logs/A2C/steps_A2C.csv', 'a', newline='') as csvfile:
-				csvwriter = csv.writer(csvfile)
-				row = [self.map_index, self.totoal_step/self.map_index]
-				csvwriter.writerow(row)
+			# with open('logs/A2C/steps_A2C.csv', 'a', newline='') as csvfile:
+			# 	csvwriter = csv.writer(csvfile)
+			# 	row = [self.map_index, self.totoal_step/self.map_index]
+			# 	csvwriter.writerow(row)
 			plt.savefig("img/A2C/%s-%d.png" % (self.map_index, self.map_step), format='png')
 			self.map_step = 0
 			self.map_index += 1
@@ -88,10 +88,10 @@ class RobEnv(gym.Env):
 		if self.num_timesteps > OBSERVE:
 			new_average_reward = np.average(self.total_reward[len(self.total_reward) - 100:])
 			self.infos['new_average_reward'].append(new_average_reward)
-			with open('logs/A2C/rewards_A2C.csv', 'a', newline='') as csvfile:
-				csvwriter = csv.writer(csvfile)
-				row = [self.num_timesteps, new_average_reward]
-				csvwriter.writerow(row)
+			# with open('logs/A2C/rewards_A2C.csv', 'a', newline='') as csvfile:
+			# 	csvwriter = csv.writer(csvfile)
+			# 	row = [self.num_timesteps, new_average_reward]
+			# 	csvwriter.writerow(row)
 
 		self.infos['terminal']=terminal
 		self.infos['re_locate']=re_locate

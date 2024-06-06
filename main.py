@@ -5,14 +5,20 @@ import numpy as np
 from utilis.config import ARGConfig
 from utilis.default_config import default_config
 from model.algo import SAC, TD3
-from utilis.Replaybuffer import ReplayMemory
+from utilis.ReplayBuffer_Trajectory import ReplayMemory, Trajectory
 import datetime
 import itertools
 from copy import copy
 from torch.utils.tensorboard import SummaryWriter
-import shutil
+from utilis.gpt_feedback import ImageScorer
 
 from env_wrapper_SAC import RobEnv
+
+api_base = "https://ai-azureaiwestusengine881797519629.openai.azure.com/"
+api_key = '4d44030e3b2b4f978a44cccc49b464f1'
+deployment_name = 'gpt-4'
+api_version = '2023-03-15-preview'
+
 
 
 def train_loop(config, msg = "default"):
@@ -47,7 +53,7 @@ def train_loop(config, msg = "default"):
         f.write(str(config))
 
     writer = SummaryWriter(result_path)
-    shutil.copytree('.', result_path + '/code', ignore=shutil.ignore_patterns('results'))
+    # shutil.copytree('.', result_path + '/code', ignore=shutil.ignore_patterns('results'))
 
     # memory
     memory = ReplayMemory(config.replay_size, config.seed)
@@ -61,6 +67,7 @@ def train_loop(config, msg = "default"):
         episode_steps = 0
         done = False
         state = env.reset()
+        traj = Trajectory(state)
 
         while not done:
             if config.start_steps > total_numsteps:
@@ -70,33 +77,6 @@ def train_loop(config, msg = "default"):
                     state = state[0]
                     # print('state0:', np.shape(state))
                 action = agent.select_action(state)  # Sample action from policy
-
-            if len(memory) > config.batch_size:
-                # Number of updates per step in environment
-                if config.algo == "SAC":
-                    for i in range(config.updates_per_step):
-                        # Update parameters of all the networks
-                        critic_1_loss, critic_2_loss, policy_loss, ent_loss, alpha = agent.update_parameters(memory, config.batch_size, updates)
-
-                        writer.add_scalar('loss/critic_1', critic_1_loss, updates)
-                        writer.add_scalar('loss/critic_2', critic_2_loss, updates)
-                        writer.add_scalar('loss/policy', policy_loss, updates)
-                        writer.add_scalar('loss/entropy_loss', ent_loss, updates)
-                        writer.add_scalar('entropy_temprature/alpha', alpha, updates)
-                        updates += 1
-                elif config.algo == "TD3":
-                    for i in range(config.updates_per_step):
-                        # Update parameters of all the networks
-                        critic_loss, policy_loss = agent.update_parameters(memory, config.batch_size, updates)
-
-                        writer.add_scalar('loss/critic', critic_loss, updates)
-                        writer.add_scalar('loss/policy', policy_loss, updates)
-                        updates += 1
-
-            # print('state:', np.shape(state)[0])
-            if np.shape(state)[0] != 57600:
-                state = state[0]
-                # print('state0:', np.shape(state))
 
             next_state, reward, done, truncated, info = env.step(action) # Step
 
@@ -108,10 +88,42 @@ def train_loop(config, msg = "default"):
             # (https://github.com/openai/spinningup/blob/master/spinup/algos/sac/sac.py)
             mask = 1 if episode_steps == env._max_episode_steps else float(not done)
 
-            memory.push(state, action, reward, next_state, mask) # Append transition to memory
+            traj.store_step(action, state, reward, done)
+            # memory.push(state, action, reward, next_state, mask) # Append transition to memory
 
             state = next_state
 
+        image_scorer = ImageScorer(api_base, api_key, deployment_name, api_version)
+        score = image_scorer.get_score_for_images(i_episode)
+        traj.store_fd(score)
+        memory.add_trajectory(traj)
+
+        if len(memory) > config.batch_size:
+            # Number of updates per step in environment
+            if config.algo == "SAC":
+                for i in range(config.updates_per_step):
+                    # Update parameters of all the networks
+                    critic_1_loss, critic_2_loss, policy_loss, ent_loss, alpha = agent.update_parameters(memory, config.batch_size, updates)
+
+                    writer.add_scalar('loss/critic_1', critic_1_loss, updates)
+                    writer.add_scalar('loss/critic_2', critic_2_loss, updates)
+                    writer.add_scalar('loss/policy', policy_loss, updates)
+                    writer.add_scalar('loss/entropy_loss', ent_loss, updates)
+                    writer.add_scalar('entropy_temprature/alpha', alpha, updates)
+                    updates += 1
+            elif config.algo == "TD3":
+                for i in range(config.updates_per_step):
+                    # Update parameters of all the networks
+                    critic_loss, policy_loss = agent.update_parameters(memory, config.batch_size, updates)
+
+                    writer.add_scalar('loss/critic', critic_loss, updates)
+                    writer.add_scalar('loss/policy', policy_loss, updates)
+                    updates += 1
+
+            # print('state:', np.shape(state)[0])
+            if np.shape(state)[0] != 57600:
+                state = state[0]
+                # print('state0:', np.shape(state))
         if total_numsteps > config.num_steps:
             break
 
