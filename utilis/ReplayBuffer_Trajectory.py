@@ -59,7 +59,11 @@ class ReplayMemory:
             traj = random.sample(self.buffer, 1)[0]
             step_state = np.random.randint(traj.length)
             state = traj.states[step_state]
+            if len(state) != 57600:
+                state = state[0]
             next_state = traj.states[step_state+1]
+            if len(next_state) != 57600:
+                next_state = next_state[0]
             action = traj.actions[step_state]
             reward = traj.rewards[step_state] 
             done = traj.dones[step_state]
@@ -73,11 +77,16 @@ class ReplayMemory:
             batch['rewards'].append(reward)
             batch['dones'].append(done)
 
+            # print('type:', type(batch['states']))
+            # print('batch[states]:', batch['states'])
+
         batch['states'] = np.array(batch['states']).astype(np.float64)
         batch['actions'] = np.array(batch['actions'])
         batch['next_states'] = np.array(batch['next_states']).astype(np.float64)
 
-        return batch
+        state, action, reward, next_state, done = zip(*batch)
+
+        return batch['states'], batch['actions'], batch['rewards'], batch['next_states'], batch['dones']
 
 
     def __len__(self):

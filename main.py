@@ -68,18 +68,22 @@ def train_loop(config, msg = "default"):
         done = False
         state = env.reset()
         traj = Trajectory(state)
+        map_step = 0
+
+        if np.shape(state)[0] != 57600:
+                    state = state[0]
+                    # print('state0:', np.shape(state))
 
         while not done:
             if config.start_steps > total_numsteps:
-                action = env.action_space.sample()  # Sample random action
+                action = env.action_space.sample()
+                map_step += 1  # Sample random action
             else:
-                if np.shape(state)[0] != 57600:
-                    state = state[0]
-                    # print('state0:', np.shape(state))
                 action = agent.select_action(state)  # Sample action from policy
+                
 
             next_state, reward, done, truncated, info = env.step(action) # Step
-
+            map_step += 1
             episode_steps += 1
             total_numsteps += 1
             episode_reward += reward
@@ -92,6 +96,15 @@ def train_loop(config, msg = "default"):
             # memory.push(state, action, reward, next_state, mask) # Append transition to memory
 
             state = next_state
+
+            # print('type:', type(state))
+            # print('len(state):', np.shape(state))
+
+            # print(state)
+
+            if np.shape(state)[0] != 57600:
+                    state = state[0]
+                    print('state0:', np.shape(state))
 
         image_scorer = ImageScorer(api_base, api_key, deployment_name, api_version)
         score = image_scorer.get_score_for_images(i_episode)
@@ -128,7 +141,9 @@ def train_loop(config, msg = "default"):
             break
 
         writer.add_scalar('train/reward', episode_reward, total_numsteps)
-        print("Episode: {}, total numsteps: {}, episode steps: {}, reward: {}".format(i_episode, total_numsteps, episode_steps, round(episode_reward, 2)))
+        writer.add_scalar('train/steps', map_step, i_episode)
+        writer.add_scalar('train/gpt_feedback', score, i_episode)
+        print("Episode: {}, total numsteps: {}, episode steps: {}, reward: {}, map steps: {}".format(i_episode, total_numsteps, episode_steps, round(episode_reward, 2), map_step))
 
         # test agent
         if i_episode % config.eval_episodes == 0 and config.eval is True:
@@ -144,7 +159,7 @@ def train_loop(config, msg = "default"):
                         state = state[0]
                         # print('state0:', np.shape(state))
                     action = agent.select_action(state, evaluate=True)
-                    next_state, reward, done, truncated, info = env.step(action)
+                    next_state, reward, done, truncated, info = env.step(action, True)
                     episode_reward += reward
                     state = next_state
                 avg_reward += episode_reward

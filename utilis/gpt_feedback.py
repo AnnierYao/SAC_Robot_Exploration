@@ -42,7 +42,7 @@ class ImageScorer:
         return f"data:{mime_type};base64,{base64_encoded_data}"
 
     def get_score_for_images(self, map_index):
-        file_pattern = f"./img/A2C/{map_index}-*.png"
+        file_pattern = f"./img/A2C/train/{map_index}-*.png"
         matched_files = glob.glob(file_pattern)
         good_url = self.local_image_to_data_url("./utilis/4398-33.png")
 
@@ -54,10 +54,16 @@ class ImageScorer:
                     model=self.deployment_name,
                     messages=[
                         { "role": "system", "content": "You are a helpful assistant." },
+                        { "role": "user", "content": [  
+                            { 
+                                "type": "text", 
+                                "text": "Please provide a structured JSON response with a 'score' key. Please give a score (range -10 to 10) on the picture I send you in the following conversation with trajectories. A good trajectory in this environment is efficient and predictable, following a logical, consistent path while adapting smoothly to changes. It mimics natural human navigation with robustness, balancing movement evenly and optimizing energy use. The trajectory should be fluid and responsive, maintaining clarity and demonstrating purposeful intent. It balances symmetry and coordination, handling obstacles and rerouting seamlessly to ensure minimal resistance and a clear direction.Please mention that, the black pixels indicate the obstacles, while the white pixels indicate the the free space. Trajectories are blue, while the red lines indicate the agent met a collision and replanned the path. Please only return a total score based on those evaluation dimensions. The response should look like this: {'score': 3}" 
+                            }
+                        ] } ,
                         { "role": "user", "content": [
                             { 
                                 "type": "text",
-                                "text": "An example of a good trajectory is shown below."
+                                "text": "Here is an example of a good trajectory. It can receive a score of 9."
                             },
                             { 
                                 "type": "image_url",
@@ -68,8 +74,8 @@ class ImageScorer:
                         ] },
                         { "role": "user", "content": [  
                             { 
-                                "type": "text", 
-                                "text": "Please provide a structured JSON response with a 'score' key. The response should look like this: {'score': 3}. Please give a score (range -10 to 10) on the picture I send you in the following conversation with trajectories I send you based on the words below: continuously, no repeated trajectory, like a human, smooth, low slope change, walk in the center of free space, no collision. Please mention that, the black pixels indicate the obstacles, while the white pixels indicate the the free space. Trajectories are blue, while the red lines indicate the agent met a collision and replanned the path. Please only return a total score based on those evaluation dimensions." 
+                                "type": "text",
+                                "text": "Here is the picture you need to rate."
                             },
                             { 
                                 "type": "image_url",

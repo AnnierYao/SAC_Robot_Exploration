@@ -32,6 +32,7 @@ class RobEnv(gym.Env):
 		self.total_reward = np.empty([0, 0])
 		self.map_step = 0
 		self.map_index = 1
+		self.test_index = 1
 		self.totoal_step = 0
 		self.num_timesteps = 0
 		self.done = False
@@ -57,7 +58,7 @@ class RobEnv(gym.Env):
 		# 	row = ['Step', 'Average_Reward']
 		# 	csvwriter.writerow(row)
 
-	def step(self, action):
+	def step(self, action, test=False):
 		state, self.reward, terminal, self.done, re_locate, collision_index, finish_all_map = self.robot_explo.step(action)
 		# self.observation = state.flatten()
 		self.observation = (state/255).flatten()
@@ -81,9 +82,14 @@ class RobEnv(gym.Env):
 			# 	csvwriter = csv.writer(csvfile)
 			# 	row = [self.map_index, self.totoal_step/self.map_index]
 			# 	csvwriter.writerow(row)
-			plt.savefig("img/A2C/%s-%d.png" % (self.map_index, self.map_step), format='png')
-			self.map_step = 0
-			self.map_index += 1
+			if test:
+				plt.savefig("img/A2C/test/%s-%d.png" % (self.test_index, self.map_step), format='png')
+				self.map_step = 0
+				self.test_index += 1
+			else:
+				plt.savefig("img/A2C/train/%s-%d.png" % (self.map_index, self.map_step), format='png')
+				self.map_step = 0
+				self.map_index += 1
 		
 		if self.num_timesteps > OBSERVE:
 			new_average_reward = np.average(self.total_reward[len(self.total_reward) - 100:])
