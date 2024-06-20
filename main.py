@@ -106,9 +106,9 @@ def train_loop(config, msg = "default"):
                     state = state[0]
                     print('state0:', np.shape(state))
 
-        image_scorer = ImageScorer(api_base, api_key, deployment_name, api_version)
-        score = image_scorer.get_score_for_images(i_episode)
-        traj.store_fd(score)
+        # image_scorer = ImageScorer(api_base, api_key, deployment_name, api_version)
+        # score = image_scorer.get_score_for_images(i_episode)
+        # traj.store_fd(score)
         memory.add_trajectory(traj)
 
         if len(memory) > config.batch_size:
@@ -142,7 +142,7 @@ def train_loop(config, msg = "default"):
 
         writer.add_scalar('train/reward', episode_reward, total_numsteps)
         writer.add_scalar('train/steps', map_step, i_episode)
-        writer.add_scalar('train/gpt_feedback', score, i_episode)
+        # writer.add_scalar('train/gpt_feedback', score, i_episode)
         print("Episode: {}, total numsteps: {}, episode steps: {}, reward: {}, map steps: {}".format(i_episode, total_numsteps, episode_steps, round(episode_reward, 2), map_step))
 
         # test agent

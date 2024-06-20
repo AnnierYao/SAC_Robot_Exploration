@@ -13,7 +13,7 @@ default_config = Config({
     "eval": True,
     "eval_episodes": 10,
     "eval_times": 100,
-    "replay_size": 1000000,
+    "replay_size": 200,
 
     "algo": "SAC",
     "policy": "Gaussian",   # 'Policy Type: Gaussian | Deterministic (default: Gaussian)'

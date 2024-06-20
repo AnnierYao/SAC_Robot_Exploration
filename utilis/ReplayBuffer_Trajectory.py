@@ -24,34 +24,15 @@ class Trajectory:
     def store_fd(self, her_fb):
         self.her_fb = her_fb
 
-    8
 
 class ReplayMemory:
-    # def __init__(self, capacity, seed):
-    #     random.seed(seed)
-    #     self.capacity = capacity
-    #     self.buffer = []
-    #     self.position = 0
     def __init__(self, capacity, seed):
         self.buffer = collections.deque(maxlen=capacity)
         random.seed(seed)
 
-    # def push(self, state, action, reward, next_state, done):
-    #     if len(self.buffer) < self.capacity:
-    #         self.buffer.append(None)
-    #     self.buffer[self.position] = (state, action, reward, next_state, done)
-    #     self.position = (self.position + 1) % self.capacity
-
     def add_trajectory(self, trajectory):
         self.buffer.append(trajectory)
 
-    # def sample(self, batch_size):
-    #     batch = random.sample(self.buffer, batch_size)
-    #     # print('batch:', np.shape(batch))
-    #     # state, action, reward, next_state, done = map(np.stack, zip(*batch))
-    #     state, action, reward, next_state, done = zip(*batch)
-    #     return np.array(state).astype(np.float64), action, reward, np.array(next_state).astype(np.float64), done
-        
     def sample(self, batch_size, use_her=True,  her_ratio=0.1):
         batch = dict(states=[], actions=[], next_states=[], rewards=[], dones=[])
         for _ in range(batch_size):
@@ -77,8 +58,6 @@ class ReplayMemory:
             batch['rewards'].append(reward)
             batch['dones'].append(done)
 
-            # print('type:', type(batch['states']))
-            # print('batch[states]:', batch['states'])
 
         batch['states'] = np.array(batch['states']).astype(np.float64)
         batch['actions'] = np.array(batch['actions'])
