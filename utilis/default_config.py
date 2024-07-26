@@ -13,16 +13,17 @@ default_config = Config({
     "eval": True,
     "eval_episodes": 10,
     "eval_times": 100,
-    "replay_size": 200,
+    "replay_size": 10000,
+    "use_her": False,
 
     "algo": "SAC",
     "policy": "Gaussian",   # 'Policy Type: Gaussian | Deterministic (default: Gaussian)'
     "gamma": 0.99, 
     "tau": 0.005,
-    "lr": 0.00001,
+    "lr": 0.00005,
     "alpha": 0.2,
     "automatic_entropy_tuning": True,
-    "batch_size": 128, 
+    "batch_size": 128,
     "updates_per_step": 1,
     "target_update_interval": 1,
     "hidden_size": 256
