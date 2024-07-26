@@ -13,8 +13,8 @@ from build.astar import *
 from random import shuffle
 import os
 
-Reward_Scale = 1
-Penalty_Scale = 1
+Reward_Scale = 10
+Penalty_Scale = 15
 
 class Robot:
     def __init__(self, index_map, train, plot):

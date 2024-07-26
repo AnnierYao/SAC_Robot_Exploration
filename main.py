@@ -37,9 +37,9 @@ def train_loop(config, msg = "default"):
     elif config.algo == "TD3":
         agent = TD3(env.observation_space.shape[0], env.action_space, config)
 
-    result_path = './results/{}/{}/{}/{}_{}_{}_{}'.format(config.env_name, config.algo, msg, 
+    result_path = './results/{}/{}/{}/{}_{}_{}_{}_{}_{}'.format(config.env_name, config.algo, msg, 
                                                       datetime.datetime.now().strftime("%Y-%m-%d_%H-%M-%S"), 
-                                                      config.policy, config.seed, 
+                                                      config.replay_size, config.lr, config.batch_size, config.seed, 
                                                       "autotune" if config.automatic_entropy_tuning else "")
 
     checkpoint_path = result_path + '/' + 'checkpoint'
@@ -111,12 +111,12 @@ def train_loop(config, msg = "default"):
         # traj.store_fd(score)
         memory.add_trajectory(traj)
 
-        if len(memory) > config.batch_size:
+        if (len(memory)*20) > config.batch_size:
             # Number of updates per step in environment
             if config.algo == "SAC":
                 for i in range(config.updates_per_step):
                     # Update parameters of all the networks
-                    critic_1_loss, critic_2_loss, policy_loss, ent_loss, alpha = agent.update_parameters(memory, config.batch_size, updates)
+                    critic_1_loss, critic_2_loss, policy_loss, ent_loss, alpha = agent.update_parameters(memory, config.batch_size, updates,use_her=config.use_her)
 
                     writer.add_scalar('loss/critic_1', critic_1_loss, updates)
                     writer.add_scalar('loss/critic_2', critic_2_loss, updates)
@@ -187,9 +187,9 @@ if __name__ == "__main__":
     arg.add_arg("algo", "SAC", "choose SAC or TD3")
     arg.add_arg("policy", "Gaussian", "Policy Type: Gaussian | Deterministic (default: Gaussian)")
     arg.add_arg("tag", "default", "Experiment tag")
-    arg.add_arg("start_steps", 10000, "Number of start steps")
+    arg.add_arg("start_steps", 20000, "Number of start steps")
     arg.add_arg("automatic_entropy_tuning", True, "Automaically adjust α (default: False)")
-    arg.add_arg("seed", 123456, "experiment seed")
+    arg.add_arg("seed", 1, "experiment seed")
     arg.parser()
 
     config = default_config
