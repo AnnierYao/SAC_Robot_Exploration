@@ -33,12 +33,47 @@ class ReplayMemory:
     def add_trajectory(self, trajectory):
         self.buffer.append(trajectory)
 
-    def sample(self, batch_size, use_her=True,  her_ratio=0.1):
+    # def sample(self, batch_size, use_her=True,  her_ratio=0.1):
+    #     batch = dict(states=[], actions=[], next_states=[], rewards=[], dones=[])
+    #     for _ in range(batch_size):
+    #         # 取一条轨迹
+    #         traj = random.sample(self.buffer, 1)[0]
+    #         step_state = np.random.randint(traj.length)
+    #         state = traj.states[step_state]
+    #         if len(state) != 57600:
+    #             state = state[0]
+    #         next_state = traj.states[step_state+1]
+    #         if len(next_state) != 57600:
+    #             next_state = next_state[0]
+    #         action = traj.actions[step_state]
+    #         reward = traj.rewards[step_state] 
+    #         done = traj.dones[step_state]
+
+    #         if use_her:
+    #             if reward > -1:
+    #                 reward += (traj.her_fb/traj.length)*her_ratio
+    #         batch['states'].append(state)
+    #         batch['actions'].append(action)
+    #         batch['next_states'].append(next_state)
+    #         batch['rewards'].append(reward)
+    #         batch['dones'].append(done)
+
+
+    #     batch['states'] = np.array(batch['states']).astype(np.float64)
+    #     batch['actions'] = np.array(batch['actions'])
+    #     batch['next_states'] = np.array(batch['next_states']).astype(np.float64)
+
+    #     state, action, reward, next_state, done = zip(*batch)
+
+    #     return batch['states'], batch['actions'], batch['rewards'], batch['next_states'], batch['dones']
+    
+    def sample(self, batch_size, use_her=True, her_ratio=10):
         batch = dict(states=[], actions=[], next_states=[], rewards=[], dones=[])
-        for _ in range(batch_size):
-            # 取一条轨迹
-            traj = random.sample(self.buffer, 1)[0]
-            step_state = np.random.randint(traj.length)
+        trajectory_indices = np.random.randint(0, len(self.buffer), size=batch_size)
+        step_indices = [np.random.randint(self.buffer[i].length) for i in trajectory_indices]
+
+        for i, step_state in zip(trajectory_indices, step_indices):
+            traj = self.buffer[i]
             state = traj.states[step_state]
             if len(state) != 57600:
                 state = state[0]
@@ -46,24 +81,24 @@ class ReplayMemory:
             if len(next_state) != 57600:
                 next_state = next_state[0]
             action = traj.actions[step_state]
-            reward = traj.rewards[step_state] 
+            reward = traj.rewards[step_state]
             done = traj.dones[step_state]
 
-            if use_her:
-                if reward > -1:
-                    reward += (traj.her_fb/traj.length)*her_ratio
+            if use_her and reward > -1:
+                reward += (traj.her_fb / traj.length) * her_ratio
+
             batch['states'].append(state)
             batch['actions'].append(action)
             batch['next_states'].append(next_state)
             batch['rewards'].append(reward)
             batch['dones'].append(done)
 
-
+        # Convert lists to NumPy arrays and return
         batch['states'] = np.array(batch['states']).astype(np.float64)
         batch['actions'] = np.array(batch['actions'])
         batch['next_states'] = np.array(batch['next_states']).astype(np.float64)
-
-        state, action, reward, next_state, done = zip(*batch)
+        batch['rewards'] = np.array(batch['rewards'])
+        batch['dones'] = np.array(batch['dones'])
 
         return batch['states'], batch['actions'], batch['rewards'], batch['next_states'], batch['dones']
 

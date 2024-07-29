@@ -66,7 +66,7 @@ def train_loop(config, msg = "default"):
         episode_reward = 0
         episode_steps = 0
         done = False
-        state = env.reset()
+        state, _ = env.reset()
         traj = Trajectory(state)
         map_step = 0
 
@@ -150,7 +150,7 @@ def train_loop(config, msg = "default"):
             avg_reward = 0.
             # avg_success = 0.
             for _  in range(config.eval_episodes):
-                state = env.reset()
+                state, _ = env.reset()
                 episode_reward = 0
                 done = False
                 while not done:
@@ -189,7 +189,7 @@ if __name__ == "__main__":
     arg.add_arg("tag", "default", "Experiment tag")
     arg.add_arg("start_steps", 20000, "Number of start steps")
     arg.add_arg("automatic_entropy_tuning", True, "Automaically adjust α (default: False)")
-    arg.add_arg("seed", 1, "experiment seed")
+    arg.add_arg("seed", 123, "experiment seed")
     arg.parser()
 
     config = default_config

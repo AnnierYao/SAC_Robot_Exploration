@@ -96,7 +96,7 @@ class RobEnv(gym.Env):
                 self.infos['num_timesteps']=self.num_timesteps
             
                 return self.observation, self.reward, self.done, truncated, self.infos
-	
+                
 	def reset(self, seed=None):
 		super().reset(seed=seed)
 		self.done = False
